@@ -106,8 +106,7 @@
               "RelativeToolTip": "..\\..\\..\\Program Files (x86)\\Steam\\steamapps\\common\\Quake 4\\test1\\def\\weapons\\rocketlauncher.def",
               "ViewState": "AgIAADYAAAAAAAAAAAAAAE4AAAAWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001913|",
-              "WhenOpened": "2025-02-03T17:56:47.995Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-02-03T17:56:47.995Z"
             },
             {
               "$type": "Document",
@@ -132,8 +131,7 @@
               "RelativeToolTip": "game\\weapon\\WeaponBlaster.cpp",
               "ViewState": "AgIAAKABAAAAAAAAAAAgwL8BAAAYAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-02-02T22:03:58.507Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-02-02T22:03:58.507Z"
             },
             {
               "$type": "Document",
@@ -145,8 +143,7 @@
               "RelativeToolTip": "renderer\\RenderWorld.h",
               "ViewState": "AgIAAE8AAAAAAAAAAIAwwGUAAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-01-28T07:21:27.606Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-28T07:21:27.606Z"
             },
             {
               "$type": "Document",
@@ -183,8 +180,7 @@
               "RelativeToolTip": "game\\gamesys\\Class.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAASAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-01-28T07:22:20.926Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-28T07:22:20.926Z"
             },
             {
               "$type": "Document",
@@ -196,8 +192,7 @@
               "RelativeToolTip": "game\\gamesys\\SaveGame.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAASAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-01-28T07:22:13.637Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-28T07:22:13.637Z"
             },
             {
               "$type": "Document",
@@ -209,8 +204,7 @@
               "RelativeToolTip": "game\\gamesys\\SysCmds.cpp",
               "ViewState": "AgIAAJcAAAAAAAAAAIAwwK0AAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-01-28T07:21:43.594Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-28T07:21:43.594Z"
             },
             {
               "$type": "Document",
@@ -222,8 +216,7 @@
               "RelativeToolTip": "idlib\\math\\Simd.cpp",
               "ViewState": "AgIAANkFAAAAAAAAAIAwwO8FAAA9AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-01-28T07:18:01.096Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-28T07:18:01.096Z"
             },
             {
               "$type": "Document",
