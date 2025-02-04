@@ -33,7 +33,7 @@ public:
 protected:
 
 	virtual void			OnLaunchProjectile	( idProjectile* proj );
-
+	bool				UpdateAttack(void);
 	void					SetRocketState		( const char* state, int blendFrames );
 
 	rvClientEntityPtr<rvClientEffect>	guideEffect;
@@ -48,6 +48,7 @@ protected:
 	float								reloadRate;
 
 	bool								idleEmpty;
+	
 
 private:
 
@@ -55,12 +56,19 @@ private:
 	stateResult_t		State_Fire				( const stateParms_t& parms );
 	stateResult_t		State_Raise				( const stateParms_t& parms );
 	stateResult_t		State_Lower				( const stateParms_t& parms );
-	
+	stateResult_t		State_Charge(const stateParms_t& parms);
+	stateResult_t		State_Charged(const stateParms_t& parms);
+
 	stateResult_t		State_Rocket_Idle		( const stateParms_t& parms );
 	stateResult_t		State_Rocket_Reload		( const stateParms_t& parms );
 	
 	stateResult_t		Frame_AddToClip			( const stateParms_t& parms );
-	
+
+	int					chargeTime;
+	int					chargeDelay;
+	bool				fireForced;
+	int					fireHeldTime;
+
 	CLASS_STATES_PROTOTYPE ( rvWeaponRocketLauncher );
 };
 
@@ -130,6 +138,58 @@ void rvWeaponRocketLauncher::Spawn ( void ) {
 
 	SetState ( "Raise", 0 );	
 	SetRocketState ( "Rocket_Idle", 0 );
+	fireHeldTime = 0;
+	fireForced = false;
+}
+
+bool rvWeaponRocketLauncher::UpdateAttack(void) {
+	// Clear fire forced
+	if (fireForced) {
+		if (!wsfl.attack) {
+			fireForced = false;
+		}
+		else {
+			return false;
+		}
+	}
+
+	// If the player is pressing the fire button and they have enough ammo for a shot
+	// then start the shooting process.
+	if (wsfl.attack && gameLocal.time >= nextAttackTime) {
+		// Save the time which the fire button was pressed
+		if (fireHeldTime == 0) {
+			nextAttackTime = gameLocal.time + (fireRate * owner->PowerUpModifier(PMOD_FIRERATE));
+			fireHeldTime = gameLocal.time;
+		}
+	}
+
+	// If they have the charge mod and they have overcome the initial charge 
+	// delay then transition to the charge state.
+	if (fireHeldTime != 0) {
+		if (gameLocal.time - fireHeldTime > chargeDelay) {
+			SetState("Charge", 4);
+			return true;
+		}
+
+		// If the fire button was let go but was pressed at one point then 
+		// release the shot.
+		if (!wsfl.attack) {
+			idPlayer* player = gameLocal.GetLocalPlayer();
+			if (player) {
+
+				if (player->GuiActive()) {
+					//make sure the player isn't looking at a gui first
+					SetState("Lower", 0);
+				}
+				else {
+					SetState("Fire", 0);
+				}
+			}
+			return true;
+		}
+	}
+
+	return false;
 }
 
 /*
@@ -254,6 +314,11 @@ void rvWeaponRocketLauncher::Save( idSaveGame *saveFile ) const {
 	saveFile->WriteFloat( guideSpeedFast );
 	saveFile->WriteFloat( guideRange );
 	saveFile->WriteFloat( guideAccelTime );
+
+	saveFile->WriteInt(chargeTime);
+	saveFile->WriteInt(chargeDelay);
+	saveFile->WriteBool(fireForced);
+	saveFile->WriteInt(fireHeldTime);
 	
 	saveFile->WriteFloat ( reloadRate );
 	
@@ -285,6 +350,10 @@ void rvWeaponRocketLauncher::Restore( idRestoreGame *saveFile ) {
 	saveFile->ReadFloat( guideSpeedFast );
 	saveFile->ReadFloat( guideRange );
 	saveFile->ReadFloat( guideAccelTime );
+	saveFile->ReadInt(chargeTime);
+	saveFile->ReadInt(chargeDelay);
+	saveFile->ReadBool(fireForced);
+	saveFile->ReadInt(fireHeldTime);
 	
 	saveFile->ReadFloat ( reloadRate );
 	
@@ -321,7 +390,8 @@ CLASS_STATES_DECLARATION ( rvWeaponRocketLauncher )
 	STATE ( "Fire",				rvWeaponRocketLauncher::State_Fire )
 	STATE ( "Raise",			rvWeaponRocketLauncher::State_Raise )
 	STATE ( "Lower",			rvWeaponRocketLauncher::State_Lower )
-
+	STATE("Charge",				rvWeaponRocketLauncher::State_Charge)
+	STATE("Charged",			rvWeaponRocketLauncher::State_Charged)
 	STATE ( "Rocket_Idle",		rvWeaponRocketLauncher::State_Rocket_Idle )
 	STATE ( "Rocket_Reload",	rvWeaponRocketLauncher::State_Rocket_Reload )
 	
@@ -424,7 +494,7 @@ stateResult_t rvWeaponRocketLauncher::State_Idle( const stateParms_t& parms ) {
 				SetState ( "Lower", 4 );
 				return SRESULT_DONE;
 			}		
-			if ( gameLocal.time > nextAttackTime && wsfl.attack && ( gameLocal.isClient || AmmoInClip ( ) ) ) {
+			if (UpdateAttack() ) { //gameLocal.time > nextAttackTime && wsfl.attack && ( gameLocal.isClient || AmmoInClip ( ) )
 				SetState ( "Fire", 2 );
 				return SRESULT_DONE;
 			}
@@ -433,6 +503,51 @@ stateResult_t rvWeaponRocketLauncher::State_Idle( const stateParms_t& parms ) {
 	return SRESULT_ERROR;
 }
 
+stateResult_t rvWeaponRocketLauncher::State_Charge(const stateParms_t& parms) {
+	enum {
+		CHARGE_INIT,
+		CHARGE_WAIT,
+	};
+	switch (parms.stage) {
+	case CHARGE_INIT:
+		return SRESULT_STAGE(CHARGE_WAIT);
+
+	case CHARGE_WAIT:
+		if (gameLocal.time - fireHeldTime < chargeTime) {
+
+			if (!wsfl.attack) {
+				SetState("Fire", 0);
+				return SRESULT_DONE;
+			}
+
+			return SRESULT_WAIT;
+		}
+		SetState("Charged", 4);
+		return SRESULT_DONE;
+	}
+	return SRESULT_ERROR;
+}
+
+stateResult_t rvWeaponRocketLauncher::State_Charged(const stateParms_t& parms) {
+	enum {
+		CHARGED_INIT,
+		CHARGED_WAIT,
+	};
+	switch (parms.stage) {
+	case CHARGED_INIT:
+		
+		return SRESULT_STAGE(CHARGED_WAIT);
+
+	case CHARGED_WAIT:
+		if (!wsfl.attack) {
+			fireForced = true;
+			SetState("Fire", 0);
+			return SRESULT_DONE;
+		}
+		return SRESULT_WAIT;
+	}
+	return SRESULT_ERROR;
+}
 /*
 ================
 rvWeaponRocketLauncher::State_Fire
@@ -445,13 +560,36 @@ stateResult_t rvWeaponRocketLauncher::State_Fire ( const stateParms_t& parms ) {
 	};	
 	switch ( parms.stage ) {
 		case STAGE_INIT:
-			nextAttackTime = gameLocal.time + (fireRate * owner->PowerUpModifier ( PMOD_FIRERATE ));		
-			Attack ( false, 1, spread, 0, 1.0f );
+			nextAttackTime = gameLocal.time + (fireRate * owner->PowerUpModifier ( PMOD_FIRERATE ));	
+			idPlayer* player;
+			player = gameLocal.GetLocalPlayer();
+			if (player && player->GuiActive()) {
+				fireHeldTime = 0;
+				SetState("Lower", 0);
+				return SRESULT_DONE;
+			}
+
+			if (player && !player->CanFire()) {
+				fireHeldTime = 0;
+				SetState("Idle", 4);
+				return SRESULT_DONE;
+			}
+
+			//Attack ( false, 1, spread, 0, 1.0f );
+
+			if (gameLocal.time - fireHeldTime > 50) {
+				Attack(false, (gameLocal.time - fireHeldTime)/50, (gameLocal.time - fireHeldTime)/250, 0, 1.0f);
+			}
+			else {
+				Attack(false, 1, spread, 0, 1.0f);
+			}
+			fireHeldTime = 0;
+
 			PlayAnim ( ANIMCHANNEL_LEGS, "fire", parms.blendFrames );	
 			return SRESULT_STAGE ( STAGE_WAIT );
 	
 		case STAGE_WAIT:			
-			if ( wsfl.attack && gameLocal.time >= nextAttackTime && ( gameLocal.isClient || AmmoInClip ( ) ) && !wsfl.lowerWeapon ) {
+			if (UpdateAttack() && wsfl.attack && gameLocal.time >= nextAttackTime && ( gameLocal.isClient || AmmoInClip ( ) ) && !wsfl.lowerWeapon ) {
 				SetState ( "Fire", 0 );
 				return SRESULT_DONE;
 			}
@@ -463,6 +601,7 @@ stateResult_t rvWeaponRocketLauncher::State_Fire ( const stateParms_t& parms ) {
 	}
 	return SRESULT_ERROR;
 }
+
 
 /*
 ================
