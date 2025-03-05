@@ -47,7 +47,7 @@ idCVar net_showPredictionError( "net_showPredictionError", "-1", CVAR_INTEGER | 
 #ifdef _XENON
 bool g_ObjectiveSystemOpen = false;
 #endif
-
+bool HelpMenuOpen = false;
 // distance between ladder rungs (actually is half that distance, but this sounds better)
 const int LADDER_RUNG_DISTANCE = 32;
 
@@ -316,6 +316,7 @@ void idInventory::GetPersistantData( idDict &dict ) {
 		sprintf( key, "levelTrigger_Trigger_%i", i );
 		dict.Set( key, levelTriggers[i].triggerName );
 	}
+	
 }
 
 /*
@@ -8474,7 +8475,7 @@ void idPlayer::PerformImpulse( int impulse ) {
 	bool updateVisuals = false;
 #endif
 //RAVEN END
-
+	gameLocal.Printf("impulse:%i\n", impulse);
 	switch( impulse ) {
 		case IMPULSE_13: {
 			Reload();
@@ -8488,7 +8489,21 @@ void idPlayer::PerformImpulse( int impulse ) {
 			break;
 		}
 		case IMPULSE_15: {
-			PrevWeapon();
+			// PrevWeapon();
+			// OPEN HELP MENU HERE YICKADEE!!!
+			// uiManager->FindGui( "guis/summary.gui", true, false, true )->Activate(true, gameLocal.time);
+			//objectiveSystem->Trigger(gameLocal.time);
+			if (!HelpMenuOpen) {
+				HelpMenuOpen = true;
+				hud->Activate(true, gameLocal.time);
+				hud->HandleNamedEvent("showHelpMenu");
+			} else {
+				HelpMenuOpen = false;
+				hud->Activate(false, gameLocal.time);
+				hud->HandleNamedEvent("hideHelpMenu");
+			}
+
+			//hud->HandleNamedEvent("showHelpMenu");
 			if( gameLocal.isServer && spectating && gameLocal.gameType == GAME_TOURNEY ) {	
 				((rvTourneyGameState*)gameLocal.mpGame.GetGameState())->SpectateCyclePrev( this );
 			}
@@ -8505,7 +8520,7 @@ void idPlayer::PerformImpulse( int impulse ) {
 			break;
 		}
 		case IMPULSE_19: {
-/*		
+/*			
 			// when we're not in single player, IMPULSE_19 is used for showScores
 			// otherwise it does IMPULSE_12 (PDA)
 			if ( !gameLocal.isMultiplayer ) {
@@ -8549,6 +8564,7 @@ void idPlayer::PerformImpulse( int impulse ) {
  				gameLocal.mpGame.ToggleSpectate( );
    			}
    			break;
+		
    		}
 				
 		case IMPULSE_28: {
@@ -8609,6 +8625,13 @@ void idPlayer::PerformImpulse( int impulse ) {
  			LastWeapon();
  			break;
  		}
+		/*
+		case IMPULSE_23: gameLocal.Printf("23YICKADEE!!!!\n");                      break;// To open the help menu (YICKADEE)
+		case IMPULSE_24: gameLocal.Printf("24YICKADEE!!!!\n");                      break;// To open the help menu (YICKADEE)
+		case IMPULSE_25: gameLocal.Printf("25YICKADEE!!!!\n");                      break;// To open the help menu (YICKADEE)
+		case IMPULSE_26: gameLocal.Printf("26YICKADEE!!!!\n");                      break;// To open the help menu (YICKADEE)
+		case IMPULSE_27: gameLocal.Printf("27YICKADEE!!!!\n");                      break;// To open the help menu (YICKADEE)
+		*/
 	} 
 
 //RAVEN BEGIN

@@ -1,0 +1,4 @@
+"Autosave game/process1"
+"^:Map Start	^0game/process1"
+""
+nooverwrite

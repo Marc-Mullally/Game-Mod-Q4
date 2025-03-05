@@ -54,8 +54,10 @@ const int IMPULSE_10			= 10;			// weap 10
 const int IMPULSE_11			= 11;			// weap 11
 const int IMPULSE_12			= 12;			// weap 12
 const int IMPULSE_13			= 13;			// weap reload
-const int IMPULSE_14			= 14;			// weap next
-const int IMPULSE_15			= 15;			// weap prev
+
+const int IMPULSE_14			= 14;			// weap next MAYBE TURN THIS TOO SOMETHING ELSE TOO (YICKADEE)
+const int IMPULSE_15			= 15;			// weap prev TURNING IT TO HELP MENU (YICAKDEE)
+
 const int IMPULSE_16			= 16;			// <unused>
 const int IMPULSE_17			= 17;			// ready to play ( toggles ui_ready )
 const int IMPULSE_18			= 18;			// center view
@@ -70,6 +72,7 @@ const int IMPULSE_26			= 26;			// <unused>
 const int IMPULSE_27			= 27;			// <unused>
 const int IMPULSE_28			= 28;			// vote yes
 const int IMPULSE_29			= 29;			// vote no
+const int IMPULSE_34            = 34;			// YICKADEE (H)
 const int IMPULSE_40			= 40;			// repeast last radio chatter
 
 // RAVEN BEGIN

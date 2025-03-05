@@ -1,0 +1,4 @@
+"Autosave game/mcc_1 operation"
+"^:Map Start	^0game/mcc_1_operation"
+""
+nooverwrite

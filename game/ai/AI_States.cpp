@@ -672,6 +672,28 @@ idAI::State_Killed
 stateResult_t idAI::State_Killed ( const stateParms_t& parms ) {
 	disablePain = true;
 
+	//
+	idEntity* newEnt = NULL;
+	const char* key, * value;
+	int			i;
+	float		yaw;
+	idVec3		org;
+	idMat3		axis;
+	idDict		dict;
+	GetPosition(org, axis);
+	//Event_GetAngles();
+	yaw = axis.ToAngles().yaw;
+	// change value later (YICKADEE)
+	value = "weaponmod_nailgun_ammo";
+	dict.Set("classname", value);
+	dict.Set("angle", va("%f", yaw + 180));
+
+	org = org + idAngles(0, yaw, 0).ToForward() * 80 + idVec3(0, 0, 1);
+	dict.Set("origin", org.ToString());
+
+	gameLocal.SpawnEntityDef(dict, &newEnt);
+	//
+	
 	//quickburning subjects skip all this jazz
 	if( fl.quickBurn )	{
 		PostState ( "State_Dead" );
@@ -704,6 +726,7 @@ idAI::State_Dead
 ================
 */
 stateResult_t idAI::State_Dead ( const stateParms_t& parms ) {
+	
 	if ( !fl.hidden ) {
 		float burnDelay = spawnArgs.GetFloat ( "burnaway" );
 		if ( burnDelay > 0.0f ) {
@@ -825,6 +848,8 @@ idAI::State_Remove
 ================
 */
 stateResult_t idAI::State_Remove ( const stateParms_t& parms ) {
+	
+	// actual stuff
 	PostEventMS( &EV_Remove, 0 );
 	return SRESULT_DONE;
 }
