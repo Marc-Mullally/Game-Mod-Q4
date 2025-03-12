@@ -2630,6 +2630,7 @@ idProjectile* idAI::AttackRanged (
 		} else {
 			// launch the projectile
 			if ( !projectile.GetEntity() ) {
+
 				CreateProjectile( attackDict, muzzleOrigin, dir );
 			}
 			lastProjectile = projectile.GetEntity();

@@ -1820,6 +1820,8 @@ void idPhysics_Player::SetSpeed( const float newWalkSpeed, const float newCrouch
 	crouchSpeed = newCrouchSpeed;
 }
 
+
+
 /*
 ================
 idPhysics_Player::SetMaxStepHeight

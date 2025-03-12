@@ -1354,7 +1354,8 @@ void idClass::RegisterClasses( void )
 	REGISTER(rvMonsterGladiator); // ..\..\code\game\ai\Monster_Gladiator.cpp
 	REGISTER(rvMonsterGrunt); // ..\..\code\game\ai\Monster_Grunt.cpp
 	REGISTER(rvMonsterGunner); // ..\..\code\game\ai\Monster_Gunner.cpp
-	REGISTER(rvMonsterHarvester); // ..\..\code\game\ai\Monster_Harvester.cpp
+	REGISTER(rvMonsterHarvester);
+	REGISTER(rvMonsterHarvesterBoss); // ..\..\code\game\ai\Monster_Harvester.cpp
 	REGISTER(rvMonsterHarvesterDispersal); // ..\..\code\game\ai\Monster_HarvesterDispersal.cpp
 	REGISTER(rvMonsterHeavyHoverTank); // ..\..\code\game\ai\Monster_HeavyHoverTank.cpp
 	REGISTER(rvMonsterIronMaiden); // ..\..\code\game\ai\Monster_IronMaiden.cpp
@@ -1423,6 +1424,7 @@ void idClass::RegisterClasses( void )
 	REGISTER(rvWeaponRailgun); // ..\..\code\game\weapon\WeaponRailgun.cpp
 	REGISTER(rvWeaponRocketLauncher); // ..\..\code\game\weapon\WeaponRocketLauncher.cpp
 	REGISTER(rvWeaponShotgun); // ..\..\code\game\weapon\WeaponShotgun.cpp
+	
 // RITUAL BEGIN
 	REGISTER(riDeadZonePowerup); // ..\..\code\game\Item.cpp
 	REGISTER(WeaponNapalmGun);	// ..\..\code\game\weapon\WeaponNapalmGun.cpp

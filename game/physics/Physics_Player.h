@@ -62,6 +62,7 @@ public:
 
 							// initialisation
 	void					SetSpeed( const float newWalkSpeed, const float newCrouchSpeed );
+		
 	void					SetMaxStepHeight( const float newMaxStepHeight );
 	float					GetMaxStepHeight( void ) const;
 	void					SetMaxJumpHeight( const float newMaxJumpHeight );

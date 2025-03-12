@@ -726,6 +726,57 @@ bool idProjectile::Collide( const trace_t &collision, const idVec3 &velocity, bo
   		common->DPrintf( "Projectile collision no impact\n" );
    		return true;
    	}
+	
+	if (ent->IsType(idPlayer::GetClassType()) && static_cast<idPlayer*>(ent)->weapon->parrying) { // YICKADEE!!!!
+		
+		/*
+		
+		idVec3 dirOffset;
+		idVec3 startOffset;
+		float   distance;
+		idVec3 start;
+		trace_t	tr;
+		static_cast<idPlayer*>(ent)->weapon->spawnArgs.GetVector("dirOffset", "0 0 0", dirOffset);
+		static_cast<idPlayer*>(ent)->weapon->spawnArgs.GetVector("startOffset", "0 0 0", startOffset);
+
+		dir = static_cast<idPlayer*>(ent)->weapon->playerViewAxis[0];
+		dir += dirOffset;
+		dir.Normalize();
+
+		idBounds ownerBounds = static_cast<idPlayer*>(ent)->GetPhysics()->GetAbsBounds();
+		idBounds projBounds = this->GetPhysics()->GetBounds().Rotate(this->GetPhysics()->GetAxis());
+		idVec3 muzzle_pos = static_cast<idPlayer*>(ent)->weapon->muzzleOrigin + static_cast<idPlayer*>(ent)->weapon->playerViewAxis[0] * 2.0f;
+		if ((ownerBounds - projBounds).RayIntersection(muzzle_pos, static_cast<idPlayer*>(ent)->weapon->playerViewAxis[0], distance)) {
+			start = muzzle_pos + distance * static_cast<idPlayer*>(ent)->weapon->playerViewAxis[0];
+		} else {
+			start = ownerBounds.GetCenter();
+		}
+
+		gameLocal.Translation(static_cast<idPlayer*>(ent)->weapon->GetOwner(), tr, start, muzzle_pos, this->GetPhysics()->GetClipModel(), this->GetPhysics()->GetClipModel()->GetAxis(), MASK_SHOT_RENDERMODEL, static_cast<idPlayer*>(ent)->weapon->GetOwner());
+		this->SetOwner(static_cast<idPlayer*>(ent));
+		this->Launch(muzzle_pos + startOffset, dir, static_cast<idPlayer*>(ent)->weapon->pushVelocity, 0, damagePower);
+
+		*/
+		this->SetOwner(static_cast<idPlayer*>(ent));
+		this->Launch(static_cast<idPlayer*>(ent)->GetChestPosition(), static_cast<idPlayer*>(ent)->weapon->playerViewAxis[0], static_cast<idPlayer*>(ent)->weapon->pushVelocity, 0, damagePower);
+
+		// static_cast<idPlayer*>(ent)->weapon->LaunchProjectiles(attackDict, static_cast<idPlayer*>(ent)->weapon->muzzleOrigin, static_cast<idPlayer*>(ent)->weapon->muzzleAxis, 1, 0, 0, damagePower);
+		//Launch(start, dir, pushVelocity, timeSinceFire, dmgPower);
+		//PostEventMS(&EV_Remove, 0);
+		/*
+		idVec3 muzzleOrigin;
+		idMat3 muzzleAxis;
+		muzzleOrigin = static_cast<idPlayer*>(ent)->weapon->playerViewOrigin;
+		muzzleAxis = static_cast<idPlayer*>(ent)->weapon->playerViewAxis;
+		muzzleOrigin += static_cast<idPlayer*>(ent)->weapon->playerViewAxis[0] * static_cast<idPlayer*>(ent)->weapon->muzzleOffset;
+		
+		//static_cast<idPlayer*>(ent)->weapon->Attack(true, 1, 0, 0, 1.0f);
+		this->Launch(muzzle_pos + startOffset, dir, static_cast<idPlayer*>(ent)->weapon->pushVelocity, 0, damagePower);
+		static_cast<idPlayer*>(ent)->weapon->LaunchProjectiles(attackDict, static_cast<idPlayer*>(ent)->weapon->muzzleOrigin, static_cast<idPlayer*>(ent)->weapon->muzzleAxis, 1, 0, 0, damagePower, this);
+		PostEventMS(&EV_Remove, 0);
+		*/
+		return true;
+	}
 
 	// If the hit entity is bound to an actor use the actor instead
 	if ( ent->GetTeamMaster( ) && ent->GetTeamMaster( )->IsType ( idActor::GetClassType() ) ) {
@@ -1009,7 +1060,7 @@ void idProjectile::SpawnImpactEntities(const trace_t& collision, const idVec3 ve
 	}
 }
 
-/*
+/*r
 =================
 idProjectile::DefaultDamageEffect
 =================

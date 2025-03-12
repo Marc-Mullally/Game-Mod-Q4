@@ -2596,6 +2596,7 @@ void rvWeapon::Attack( bool altAttack, int num_attacks, float spread, float fuse
 		if ( altAttack ? wfl.attackAltHitscan : wfl.attackHitscan ) {
 			Hitscan( dict, muzzleOrigin, muzzleAxis, num_attacks, spread, power );
 		} else {
+
 			LaunchProjectiles( dict, muzzleOrigin, muzzleAxis, num_attacks, spread, fuseOffset, power );
 		}
 		//asalmon:  changed to keep stats even in single player 
@@ -2609,7 +2610,8 @@ void rvWeapon::Attack( bool altAttack, int num_attacks, float spread, float fuse
 rvWeapon::LaunchProjectiles
 ================
 */
-void rvWeapon::LaunchProjectiles ( idDict& dict, const idVec3& muzzleOrigin, const idMat3& muzzleAxis, int num_projectiles, float spread, float fuseOffset, float power ) {
+void rvWeapon::LaunchProjectiles ( idDict& dict, const idVec3& muzzleOrigin, const idMat3& muzzleAxis, int num_projectiles, float spread, float fuseOffset, float power, idProjectile* projectile ) {
+	
 	idProjectile*	proj;
 	idEntity*		ent;
 	int				i;
@@ -2635,39 +2637,47 @@ void rvWeapon::LaunchProjectiles ( idDict& dict, const idVec3& muzzleOrigin, con
 	spawnArgs.GetVector( "dirOffset", "0 0 0", dirOffset );
 	spawnArgs.GetVector( "startOffset", "0 0 0", startOffset );
 
-	for( i = 0; i < num_projectiles; i++ ) {
+	for (i = 0; i < num_projectiles; i++) {
 		float	 ang;
 		float	 spin;
 		idVec3	 dir;
 		idBounds projBounds;
 		idVec3	 muzzle_pos;
-		
+
 		// Calculate a random launch direction based on the spread
-		ang = idMath::Sin( spreadRad * gameLocal.random.RandomFloat() );
-		spin = (float)DEG2RAD( 360.0f ) * gameLocal.random.RandomFloat();
-//RAVEN BEGIN
-//asalmon: xbox must use muzzle Axis for aim assistance
+		ang = idMath::Sin(spreadRad * gameLocal.random.RandomFloat());
+		spin = (float)DEG2RAD(360.0f) * gameLocal.random.RandomFloat();
+		//RAVEN BEGIN
+		//asalmon: xbox must use muzzle Axis for aim assistance
 #ifdef _XBOX
-		dir = muzzleAxis[ 0 ] + muzzleAxis[ 2 ] * ( ang * idMath::Sin( spin ) ) - muzzleAxis[ 1 ] * ( ang * idMath::Cos( spin ) );
+		dir = muzzleAxis[0] + muzzleAxis[2] * (ang * idMath::Sin(spin)) - muzzleAxis[1] * (ang * idMath::Cos(spin));
 		dir += dirOffset;
 #else
-		dir = playerViewAxis[ 0 ] + playerViewAxis[ 2 ] * ( ang * idMath::Sin( spin ) ) - playerViewAxis[ 1 ] * ( ang * idMath::Cos( spin ) );
+		dir = playerViewAxis[0] + playerViewAxis[2] * (ang * idMath::Sin(spin)) - playerViewAxis[1] * (ang * idMath::Cos(spin));
 		dir += dirOffset;
+		//dir = playerViewAxis[ 0 ];
+		//dir += dirOffset;
+
 #endif
 //RAVEN END
 		dir.Normalize();
-	
+
 		// If a projectile entity has already been created then use that one, otherwise
 		// spawn a new one based on the given dictionary
-		if ( projectileEnt ) {
+		if (!projectileEnt && projectile) {
+			projectileEnt = projectile;
+		}
+		if (projectileEnt) {
 			ent = projectileEnt;
 			ent->Show();
 			ent->Unbind();
 			projectileEnt = NULL;
-		} else {
-			dict.SetInt( "instance", owner->GetInstance() );
-			gameLocal.SpawnEntityDef( dict, &ent, false );
 		}
+		else {
+			dict.SetInt("instance", owner->GetInstance());
+			gameLocal.SpawnEntityDef(dict, &ent, false);
+		}
+		
 
 		// Make sure it spawned
 		if ( !ent ) {
@@ -2676,10 +2686,17 @@ void rvWeapon::LaunchProjectiles ( idDict& dict, const idVec3& muzzleOrigin, con
 		
 		assert ( ent->IsType( idProjectile::GetClassType() ) );
 
-		// Create the projectile
+		// Create the projectile 
+		/*
+		if (projectile) {
+			ent = projectile;
+		}
+		*/
 		proj = static_cast<idProjectile*>(ent);
-		proj->Create( owner, muzzleOrigin + startOffset, dir, NULL, owner->extraProjPassEntity );
+		
 
+		proj->Create( owner, muzzleOrigin + startOffset, dir, NULL, owner->extraProjPassEntity );
+		//proj->attackDict = dict;
 		projBounds = proj->GetPhysics()->GetBounds().Rotate( proj->GetPhysics()->GetAxis() );
 
 		// make sure the projectile starts inside the bounding box of the owner
@@ -2719,6 +2736,7 @@ void rvWeapon::LaunchProjectiles ( idDict& dict, const idVec3& muzzleOrigin, con
 		OnLaunchProjectile ( proj );
 	}
 }
+
 
 /*
 ================

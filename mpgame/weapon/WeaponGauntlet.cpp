@@ -473,10 +473,8 @@ stateResult_t rvWeaponGauntlet::State_Fire( const stateParms_t& parms ) {
 			PlayAnim( ANIMCHANNEL_ALL, "attack_start", parms.blendFrames );
 			StartBlade();
 			loopSound = LOOP_NONE;
-			// #32 - no gauntlet spin up
-			//return SRESULT_STAGE( STAGE_START_WAIT );
 			return SRESULT_STAGE( STAGE_LOOP );
-		
+			//return SRESULT_STAGE( STAGE_START_WAIT );
 		case STAGE_START_WAIT:
 			if ( !wsfl.attack ) {
 				return SRESULT_STAGE( STAGE_END );

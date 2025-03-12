@@ -1550,7 +1550,7 @@ void idEntity::ProjectOverlay( const idVec3 &origin, const idVec3 &dir, float si
 	if ( modelDefHandle < 0 ) {
 		return;
 	}
-
+	
 	// only do this on dynamic md5 models
 	if ( renderEntity.hModel->IsDynamicModel() != DM_CACHED ) {
 		return;

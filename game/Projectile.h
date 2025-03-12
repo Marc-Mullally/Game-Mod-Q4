@@ -59,6 +59,8 @@ public :
 	// information about what kind of projectile we are, used for death messages
 	int						methodOfDeath;
 
+	idDict					attackDict;
+
 	virtual void			ClientPredictionThink( void );
 	virtual void			WriteToSnapshot( idBitMsgDelta &msg ) const;
 	virtual void			ReadFromSnapshot( const idBitMsgDelta &msg );
@@ -131,7 +133,7 @@ protected:
 
 private:
 	void					DefaultDamageEffect	( const trace_t &collision, const idVec3 &velocity, const char *damageDefName );
-
+	
 	void					Event_Explode			( void );
 	void					Event_Fizzle			( void );
 	void					Event_RadiusDamage		( idEntity *ignore );

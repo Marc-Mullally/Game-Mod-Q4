@@ -247,6 +247,7 @@
     <ClCompile Include="game\ai\Monster_Grunt.cpp" />
     <ClCompile Include="game\ai\Monster_Gunner.cpp" />
     <ClCompile Include="game\ai\Monster_Harvester.cpp" />
+    <ClCompile Include="game\ai\Monster_HarvesterBoss.cpp" />
     <ClCompile Include="game\ai\Monster_HarvesterDispersal.cpp" />
     <ClCompile Include="game\ai\Monster_HeavyHoverTank.cpp" />
     <ClCompile Include="game\ai\Monster_IronMaiden.cpp" />

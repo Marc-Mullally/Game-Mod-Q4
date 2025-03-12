@@ -20,7 +20,7 @@ public:
 	void				PostSave	( void );
 
 protected:
-
+	float				range;
 	bool				UpdateAttack		( void );
 	bool				UpdateFlashlight	( void );
 	void				Flashlight			( bool on );
@@ -32,6 +32,7 @@ private:
 	idVec2				chargeGlow;
 	bool				fireForced;
 	int					fireHeldTime;
+	
 
 	stateResult_t		State_Raise				( const stateParms_t& parms );
 	stateResult_t		State_Lower				( const stateParms_t& parms );
@@ -391,20 +392,81 @@ stateResult_t rvWeaponBlaster::State_Charged ( const stateParms_t& parms ) {
 	}
 	return SRESULT_ERROR;
 }
+/*
+void rvWeaponBlaster::Attack(void) {
+	trace_t		tr;
+	idEntity* ent;
 
+	// Cast a ray out to the lock range
+// RAVEN BEGIN
+// ddynerman: multiple clip worlds
+	
+	gameLocal.TracePoint(owner, tr,
+		playerViewOrigin,
+		playerViewOrigin + playerViewAxis[0] * range,
+		MASK_SHOT_RENDERMODEL, owner);
+	// RAVEN END
+	owner->WeaponFireFeedback(&weaponDef->dict);
+	/**
+	muzzleOrigin = playerViewOrigin;
+	muzzleAxis = playerViewAxis;
+	muzzleOrigin += playerViewAxis[0] * muzzleOffset;
+	
+	//Hitscan(attackDict, playerViewOrigin, playerViewAxis, 1, 0, 1.0f);
+	
+
+	// Entity we hit?
+	ent = gameLocal.entities[tr.c.entityNum];
+	if (ent) {
+		gameLocal.Printf(ent->GetClassname());
+		gameLocal.Printf("\n");
+	}
+	// If the impact material changed then stop the impact effect 
+	
+	
+	
+	// Do damage?
+	if (gameLocal.time > nextAttackTime) {
+		if (ent) {
+			if (ent->fl.takedamage) {
+				float dmgScale = 1.0f;
+				dmgScale *= owner->PowerUpModifier(PMOD_MELEE_DAMAGE);
+				ent->Damage(owner, owner, playerViewAxis[0], spawnArgs.GetString("def_damage"), dmgScale, 0);
+				// StartSound("snd_hit", SND_CHANNEL_ANY, 0, false, NULL);
+				if (ent->spawnArgs.GetBool("bleed")) {
+					// PlayLoopSound(LOOP_FLESH);
+				}
+				else {
+					// PlayLoopSound(LOOP_WALL);
+				}
+			}
+			else {
+				// PlayLoopSound(LOOP_WALL);
+			}
+		}
+		else {
+			// PlayLoopSound(LOOP_NONE);
+		}
+		nextAttackTime = gameLocal.time + fireRate;
+	}
+	
+}
+*/
 /*
 ================
 rvWeaponBlaster::State_Fire
 ================
 */
 stateResult_t rvWeaponBlaster::State_Fire ( const stateParms_t& parms ) {
+	
+	
 	enum {
 		FIRE_INIT,
 		FIRE_WAIT,
 	};	
 	switch ( parms.stage ) {
 		case FIRE_INIT:	
-
+			
 			StopSound ( SND_CHANNEL_ITEM, false );
 			viewModel->SetShaderParm ( BLASTER_SPARM_CHARGEGLOW, 0 );
 			//don't fire if we're targeting a gui.
@@ -427,11 +489,11 @@ stateResult_t rvWeaponBlaster::State_Fire ( const stateParms_t& parms ) {
 
 	
 			if ( gameLocal.time - fireHeldTime > chargeTime ) {	
-				Attack ( true, 1, spread, 0, 1.0f );
+				Attack(true, 1, spread, 0, 1.0f );
 				PlayEffect ( "fx_chargedflash", barrelJointView, false );
 				PlayAnim( ANIMCHANNEL_ALL, "chargedfire", parms.blendFrames );
 			} else {
-				Attack ( false, 1, spread, 0, 1.0f );
+				Attack(false, 1, spread, 0, 1.0f );
 				PlayEffect ( "fx_normalflash", barrelJointView, false );
 				PlayAnim( ANIMCHANNEL_ALL, "fire", parms.blendFrames );
 			}
@@ -465,6 +527,7 @@ stateResult_t rvWeaponBlaster::State_Flashlight ( const stateParms_t& parms ) {
 	switch ( parms.stage ) {
 		case FLASHLIGHT_INIT:			
 			SetStatus ( WP_FLASHLIGHT );
+
 			// Wait for the flashlight anim to play		
 			PlayAnim( ANIMCHANNEL_ALL, "flashlight", 0 );
 			return SRESULT_STAGE ( FLASHLIGHT_WAIT );
@@ -475,8 +538,10 @@ stateResult_t rvWeaponBlaster::State_Flashlight ( const stateParms_t& parms ) {
 			}
 			
 			if ( owner->IsFlashlightOn() ) {
+				parrying = false;
 				Flashlight ( false );
 			} else {
+				parrying = true;
 				Flashlight ( true );
 			}
 			

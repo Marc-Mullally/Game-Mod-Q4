@@ -82,6 +82,9 @@ const int	MAX_INVENTORY_ITEMS = 20;
 
 const int	ARENA_POWERUP_MASK = ( 1 << POWERUP_AMMOREGEN ) | ( 1 << POWERUP_GUARD ) | ( 1 << POWERUP_DOUBLER ) | ( 1 << POWERUP_SCOUT );
 
+
+
+
 //const idEventDef EV_Player_HideDatabaseEntry ( "<hidedatabaseentry>", NULL );
 const idEventDef EV_Player_ZoomIn ( "<zoomin>" );
 const idEventDef EV_Player_ZoomOut ( "<zoomout>" );
@@ -116,7 +119,32 @@ const idEventDef EV_Player_DisableObjectives( "disableObjectives" );
 
 // mekberg: don't suppress showing of new objectives anymore
 const idEventDef EV_Player_AllowNewObjectives( "<allownewobjectives>" );
+class upgrades {
+public:
+	const char* upgradeName;
+	const char* upgradeDescription;
+	bool obtained;
 
+	upgrades(const char* name, const char* description) {
+		upgradeName = name;
+		upgradeDescription = description;
+		obtained = false;
+	}
+
+	upgrades() {
+		upgradeName = "upgradeName";
+		upgradeDescription = "upgradeDescription";
+		obtained = false;
+	}
+
+	bool upgrades::operator==(upgrades const& otherUpgrade) {
+		return (upgradeName == otherUpgrade.upgradeName) && (upgradeDescription == otherUpgrade.upgradeDescription);
+	}
+};
+
+upgrades upgradeList[] = { upgrades("Double\nJump", "Gain a second\n jump in the air"), upgrades("Dash", "Click Left Shift\n to Dash forward"), upgrades("Resurrection","Regain all your health\n on the brink of death"), upgrades("Burn\n Effect","Apply burn to\n your enemies on hit") };
+upgrades upgradeOptions[3];
+upgrades powerUpList[] = { upgrades("Max\nHealth", "Increase your max\n health by 25"), upgrades("Armor", "Increase your\n armor by 25"), upgrades("Speed", "Increase your speed by 25"),  upgrades("Dash\nDistance", "Increase your dash\n distance by 100"), upgrades("Reduce\Dash CD", "Decrease your dash\n cooldown by 25%") };
 // RAVEN END
 
 CLASS_DECLARATION( idActor, idPlayer )
@@ -3398,6 +3426,7 @@ void idPlayer::UpdateHudStats( idUserInterface *_hud ) {
 		_hud->SetStateInt   ( "player_healthDelta", temp == -1 ? 0 : (temp - health) );
 		_hud->SetStateInt	( "player_health", health < -100 ? -100 : health );
 		_hud->SetStateFloat	( "player_healthpct", idMath::ClampFloat ( 0.0f, 1.0f, (float)health / (float)inventory.maxHealth ) );
+		_hud->SetStateInt("playerLevel", level);
 		_hud->HandleNamedEvent ( "updateHealth" );
 	}
 		
@@ -4175,7 +4204,7 @@ bool idPlayer::GiveItem( idItem *item ) {
 	if ( gameLocal.isMultiplayer && spectating ) {
 		return false;
 	}
-
+	
 	item->GetAttributes( attr );
 
 	if( gameLocal.isServer || !gameLocal.isMultiplayer ) {
@@ -5083,6 +5112,106 @@ bool idPlayer::GiveWeaponMods( int weapon, int mods ) {
 	return true;
 }
 
+// YICKADEE!!!
+int idPlayer::numberOfUpgrades() {
+	int num = 0;
+	for (upgrades &upgrade : upgradeList) {
+		if (upgrade.obtained) {
+			num++;
+		}
+	}
+	return num;
+}
+void idPlayer::LevelUp() {
+	exp = 0;
+	level++;
+	hud->SetStateInt("playerLevel", level);
+	
+	for (upgrades &option : upgradeOptions) {
+		option = upgrades();
+	}
+
+	int upgradeTotal = numberOfUpgrades();
+
+	for (int i = 0; i < sizeof(upgradeOptions); i++) {
+		while (upgradeOptions[i].upgradeName == "upgradeName") {
+			upgrades upgrade = upgradeList[gameLocal.random.RandomInt((sizeof(upgradeList) / sizeof(upgradeList[0])))];
+			if (!upgrade.obtained && !(upgradeOptions[0]==upgrade || upgradeOptions[1] == upgrade || upgradeOptions[2] == upgrade)) {
+				upgradeOptions[i] = upgrade;
+				break;
+			}
+			if ((sizeof(upgradeList) / sizeof(upgradeList[0])) <= upgradeTotal+i) {
+				upgradeOptions[i] = powerUpList[gameLocal.random.RandomInt((sizeof(powerUpList) / sizeof(powerUpList[0])))];
+				break;
+			}
+		}
+	}
+	this->inventory.levelingUp = true;
+	hud->HandleNamedEvent("showUpgradeMenu");
+	hud->SetStateString("upgradeName1", upgradeOptions[0].upgradeName);
+	hud->SetStateString("upgradeName2", upgradeOptions[1].upgradeName);
+	hud->SetStateString("upgradeName3", upgradeOptions[2].upgradeName);
+	hud->SetStateString("upgradeDescription1", upgradeOptions[0].upgradeDescription);
+	hud->SetStateString("upgradeDescription2", upgradeOptions[1].upgradeDescription);
+	hud->SetStateString("upgradeDescription3", upgradeOptions[2].upgradeDescription);
+}
+
+void idPlayer::selectUpgrade(int i) {
+	if (inventory.levelingUp) {
+		for (upgrades &upgrade : upgradeList) {
+			if (upgradeOptions[i] == upgrade) {
+				upgrade.obtained = true;
+				hud->HandleNamedEvent("hideUpgradeMenu");
+				inventory.levelingUp = false;
+				return;
+			}
+		}
+		
+		for (upgrades &powerUp : powerUpList) {
+			if (upgradeOptions[i] == powerUp) {
+				if (powerUp.upgradeName == powerUpList[0].upgradeName) {
+					inventory.maxHealth += 25;
+					health += 25;
+				} else if (powerUp == powerUpList[1]) {
+					inventory.maxarmor += 25;
+					inventory.armor += 25;
+				} else if (powerUp == powerUpList[2]) {
+					//physicsObj.SetSpeed(100000.0f, pm_crouchspeed.GetFloat());
+					//gameLocal.Printf("%s", physicsObj.GetSpeed());
+					pm_speed.SetFloat(pm_speed.GetFloat() + 25.0f);
+				} else if (powerUp == powerUpList[3]) {
+					dashDistance += 100;
+				} else if (powerUp == powerUpList[4]) {
+					dashCooldown *= .75;
+				}
+				hud->HandleNamedEvent("hideUpgradeMenu");
+				inventory.levelingUp = false;
+				return;
+			}
+		}
+		
+	}
+	
+}
+
+
+void idPlayer::playerDash() {
+	if (upgradeList[1].obtained && gameLocal.time > lastDashUsed + dashCooldown) {
+		idVec3 dashVector = viewAngles.ToMat3()[0];
+		
+
+		GetPhysics()->ApplyImpulse(0, this->GetPhysics()->GetOrigin(), dashVector * dashDistance * 100.0f);
+		gameLocal.Printf("yickadee");
+		gameLocal.Printf("Dash vector x: %f \n", dashVector.x * dashDistance);
+		gameLocal.Printf("Dash vector y: %f \n", dashVector.y * dashDistance);
+		gameLocal.Printf("Dash vector z: %f \n", dashVector.z * dashDistance);
+		lastDashUsed = gameLocal.time;
+	}
+	
+}
+
+
+
 /*
 ==============
 idPlayer::GiveWeaponMod
@@ -5101,7 +5230,12 @@ void idPlayer::GiveWeaponMod ( const char* weaponmod ) {
 		gameLocal.Warning ( "Invalid weapon modification def specified '%s'", weaponmod );
 		return;
 	}
-		
+	exp++;
+	if (exp / level >= 1) {
+		LevelUp();
+	} 
+	hud->SetStateFloat("expPercent", ((float)exp) / ((float)level));
+	
 	// Get the weapon it modifies
 	weaponClass = modDict->GetString ( "weapon" );
 	weaponDict  = gameLocal.FindEntityDefDict ( weaponClass, false );
@@ -8455,7 +8589,7 @@ void idPlayer::PerformImpulse( int impulse ) {
 		msg.WriteBits( impulse, IMPULSE_NUMBER_OF_BITS );
 		ClientSendEvent( EVENT_IMPULSE, &msg );
 	}
-
+	
 	if ( impulse >= IMPULSE_0 && impulse <= IMPULSE_12 ) {
 		SelectWeapon( impulse, false );
 		return;
@@ -8475,7 +8609,7 @@ void idPlayer::PerformImpulse( int impulse ) {
 	bool updateVisuals = false;
 #endif
 //RAVEN END
-	gameLocal.Printf("impulse:%i\n", impulse);
+	//gameLocal.Printf("impulse:%i\n", impulse);
 	switch( impulse ) {
 		case IMPULSE_13: {
 			Reload();
@@ -8489,21 +8623,8 @@ void idPlayer::PerformImpulse( int impulse ) {
 			break;
 		}
 		case IMPULSE_15: {
-			// PrevWeapon();
-			// OPEN HELP MENU HERE YICKADEE!!!
-			// uiManager->FindGui( "guis/summary.gui", true, false, true )->Activate(true, gameLocal.time);
-			//objectiveSystem->Trigger(gameLocal.time);
-			if (!HelpMenuOpen) {
-				HelpMenuOpen = true;
-				hud->Activate(true, gameLocal.time);
-				hud->HandleNamedEvent("showHelpMenu");
-			} else {
-				HelpMenuOpen = false;
-				hud->Activate(false, gameLocal.time);
-				hud->HandleNamedEvent("hideHelpMenu");
-			}
-
-			//hud->HandleNamedEvent("showHelpMenu");
+			PrevWeapon();
+			
 			if( gameLocal.isServer && spectating && gameLocal.gameType == GAME_TOURNEY ) {	
 				((rvTourneyGameState*)gameLocal.mpGame.GetGameState())->SpectateCyclePrev( this );
 			}
@@ -8625,13 +8746,40 @@ void idPlayer::PerformImpulse( int impulse ) {
  			LastWeapon();
  			break;
  		}
-		/*
-		case IMPULSE_23: gameLocal.Printf("23YICKADEE!!!!\n");                      break;// To open the help menu (YICKADEE)
-		case IMPULSE_24: gameLocal.Printf("24YICKADEE!!!!\n");                      break;// To open the help menu (YICKADEE)
-		case IMPULSE_25: gameLocal.Printf("25YICKADEE!!!!\n");                      break;// To open the help menu (YICKADEE)
-		case IMPULSE_26: gameLocal.Printf("26YICKADEE!!!!\n");                      break;// To open the help menu (YICKADEE)
-		case IMPULSE_27: gameLocal.Printf("27YICKADEE!!!!\n");                      break;// To open the help menu (YICKADEE)
-		*/
+		
+		case IMPULSE_23: {
+			selectUpgrade(0);
+			break;
+		}
+
+		case IMPULSE_24: {
+			selectUpgrade(1);
+			break;
+		}
+		
+		case IMPULSE_25: {
+			selectUpgrade(2);
+			break;
+		}
+
+		case IMPULSE_26: {
+			// OPEN HELP MENU HERE YICKADEE!!!
+			if (!HelpMenuOpen) {
+				HelpMenuOpen = true;
+				hud->Activate(true, gameLocal.time);
+				hud->HandleNamedEvent("showHelpMenu");
+			}
+			else {
+				HelpMenuOpen = false;
+				hud->Activate(false, gameLocal.time);
+				hud->HandleNamedEvent("hideHelpMenu");
+			}
+		}
+
+		case IMPULSE_27: {
+			playerDash();
+		}
+		
 	} 
 
 //RAVEN BEGIN

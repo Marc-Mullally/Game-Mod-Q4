@@ -14,6 +14,7 @@
 ===============================================================================
 */
 
+
 extern const idEventDef EV_Player_GetButtons;
 extern const idEventDef EV_Player_GetMove;
 extern const idEventDef EV_Player_GetViewAngles;
@@ -107,6 +108,8 @@ struct rvDatabaseEntry {
 	idStr filter;
 };
 */
+
+
 typedef struct {
 	int		time;
 	idVec3	dir;		// scaled larger for running
@@ -191,15 +194,46 @@ typedef enum {
 } itemBuyStatus_t;
 
 const int	ASYNC_PLAYER_TOURNEY_STATUS_BITS = idMath::BitsForInteger( PTS_NUM_STATES );
-
-class idInventory {
+/*
+class upgrades {
 public:
+	const char* upgradeName;
+	const char* upgradeDescription;
+	bool obtained;
+
+	upgrades(const char* name, const char* description) {
+		upgradeName = name;
+		upgradeDescription = description;
+		obtained = false;
+	}
+
+	upgrades() {
+		upgradeName = "upgradeName";
+		upgradeDescription = "upgradeDescription";
+		obtained = false;
+	}
+		
+};
+
+upgrades upgradeList[] = { upgrades("Double Jump", "Gain a second jump in the air"), upgrades("Dash", "Click Left Shift to Dash forward"), upgrades("Resurrection","Regain all your health on the brink of death"), upgrades("Burn Effect","Apply burn to your enemies on hit") };
+upgrades upgradeOptions[3] = {};
+upgrades powerUpList[] = { upgrades("Max Health", "Increase your max health by 25"), upgrades("Armor", "Increase your armor by 25"), upgrades("Speed", "Increase your speed by 5") };
+*/
+class idInventory {
+
+	
+
+public:
+
+	
+
 	int						maxHealth;
 	int						weapons;
 // RITUAL BEGIN
 // squirrel: Mode-agnostic buymenus
 	int						carryOverWeapons;
 // RITUAL END
+	bool					levelingUp = false;
 	int						powerups;
 	int						armor;
 	int						maxarmor;
@@ -207,6 +241,10 @@ public:
 	int						clip[ MAX_WEAPONS ];
 	int						powerupEndTime[ POWERUP_MAX ];
 	int						weaponMods[ MAX_WEAPONS ];
+	
+
+
+	
 
  	// multiplayer
  	int						ammoPredictTime;
@@ -509,7 +547,19 @@ public:
 	void					StopRadioChatter ( void );
 
 	void					WeaponFireFeedback( const idDict *weaponDef );
-
+	
+	void					LevelUp();
+	int						numberOfUpgrades();
+	void					playerDash();
+	void					selectUpgrade(int i);
+	
+	int						lastDashUsed = 0;
+	int						dashCooldown = 7500;
+	float					dashDistance = 500.0f;
+	int						exp = 0;
+	int						level = 1;
+	
+	
  	float					DefaultFov( void ) const;
  	float					CalcFov( bool honorZoom );
 	void					CalculateViewWeaponPos( idVec3 &origin, idMat3 &axis );

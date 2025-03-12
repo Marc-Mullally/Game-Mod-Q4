@@ -602,7 +602,7 @@ bool idItem::GiveToPlayer( idPlayer *player ) {
 		}
 		return false;
 	} 
-
+	
 	return player->GiveItem( this );
 }
 
@@ -902,7 +902,9 @@ void idItem::Event_Pickup( int clientNum ) {
 		player = (idPlayer*)gameLocal.entities[ clientNum ];
 		player->lastPickupTime = gameLocal.time;
 		if ( player ) {
+			
 			player->GiveItem( this );
+			
 		}
 	}
 }

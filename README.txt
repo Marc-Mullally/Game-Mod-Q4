@@ -21,16 +21,6 @@ How to Create Shortcut
 5. Click "Apply"
 6. Done! Double clicking or running the shortcut will automatically boot Quake 4 with the mod
 
-----------
-Controls
-----------
-
-Left Click - Swing
-F - Parry
-R - Weapon special (Needs upgrade)
-T - Ability (Needs upgrade)
-Left Shift - Dash (Needs upgrade)
-Space (while in the air) - Double Jump (Needs upgrade)
 
 ----------
 How to Play
@@ -38,7 +28,7 @@ How to Play
 1. After spawning, open the console with CTRL + ALT + `
 2. Insert "map game/convoy2"
 3. You will be teleported to a new map, where you will have to kill the Hornet in front of you to start the game
-4. Click ] for a help menu
+4. Click H for a help menu
 
 ----------
 How to Test
@@ -47,11 +37,6 @@ How to Test
 Enemies constantly spawn:
 After using "map game/convoy2", kill the Hornet and the enemies will begin to constantly spawn
 
-5 more weapons:
-Use "giveupgrade " with a weapon name (Using "give weapon_name" also works)
-Use "giveupgrade specialSkill" to get the special skill of your weapon
-Use "giveupgrade specialUpgrade" to get the upgraded special skill of your weapon
-
 10 different upgrades:
 Use "giveupgrade " with an upgrade name to gain any upgrade you want
 
@@ -59,31 +44,25 @@ Loot from the enemies:
 Kill an enemy that is spawning 
 
 A boss that works with the waves:
-Use "levelup 100" while in the arena to spawn in the boss
+Use "levelup 50" while in the arena to spawn in the boss
 
 
 ----------
 Commands (Unfinished currently)
 ----------
 levelup (# of levels) 
-giveupgrade (upgrade_name)
+giveupgrade (upgrade_number)
 giveallupgrades
 
 
 ----------
 List of Upgrades (Unfinished currently)
 ----------
-burnStatus, bleedStatus,...
-dash
-doubleJump
-specialSkill
-specialUpgrade
-resurrection 
-healthBoost
-sandevista
-wakizashi
-odachi
-dualBlades
+1. Double Jump
+2. Dash
+3. Resurrection
+4. Burn Effect
+5.
 
 
 

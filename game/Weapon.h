@@ -210,7 +210,7 @@ public:
 
 	// Attack
 	bool				PerformAttack				( idVec3& muzzleOrigin, idMat3& muzzleAxis, float dmgPower );
-	void				LaunchProjectiles			( idDict& dict, const idVec3& muzzleOrigin, const idMat3& muzzleAxis, int num_projectiles, float spread, float fuseOffset, float power );
+	void				LaunchProjectiles			( idDict& dict, const idVec3& muzzleOrigin, const idMat3& muzzleAxis, int num_projectiles, float spread, float fuseOffset, float power, idProjectile* proj = NULL);
 	void				Hitscan						( const idDict& dict, const idVec3& muzzleOrigin, const idMat3& muzzleAxis, int num_hitscans, float spread, float power );
 	void				AlertMonsters				( void );
 
@@ -393,7 +393,7 @@ public:
 	// General
 	idStr							icon;
 	bool							isStrogg;
-	
+	bool							parrying;
 	bool							forceGUIReload;
 
 public:
