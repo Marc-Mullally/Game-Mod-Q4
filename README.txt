@@ -58,11 +58,11 @@ giveallupgrades
 ----------
 List of Upgrades (Unfinished currently)
 ----------
-1. Double Jump
+1. Double Jump (Not implemented)
 2. Dash
 3. Resurrection
-4. Burn Effect
-5.
+4. Wither Effect
+5. Life Steal
 
 
 

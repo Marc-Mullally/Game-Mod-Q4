@@ -1141,6 +1141,15 @@ void idAI::Think( void ) {
 	if ( CheckDormant() ) {
 		return;
 	}
+	if (withering && gameLocal.time > lastWitherTick + (gameLocal.GetLocalPlayer()->witherTick*gameLocal.GetLocalPlayer()->witherLength)) {
+		health -= gameLocal.GetLocalPlayer()->witherDamage;
+		//gameLocal.Printf("%i \n", health);
+		lastWitherTick = gameLocal.time;
+	}
+	if (withering && gameLocal.time > witherInflictTime + gameLocal.GetLocalPlayer()->witherLength) {
+		//gameLocal.Printf("wither ended");
+		withering = false;
+	}
 
 	// Simple think this frame?
 	aifl.simpleThink = aiManager.IsSimpleThink ( this );
@@ -1971,7 +1980,7 @@ void idAI::UpdateEnemyPosition ( bool forceUpdate ) {
 	if( !enemy.ent || (!enemy.fl.visible && !forceUpdate) ) {
 		return;
 	}
-
+	
 	idActor*  enemyActor = dynamic_cast<idActor*>(enemy.ent.GetEntity());
 	idEntity* enemyEnt   = static_cast<idEntity*>(enemy.ent.GetEntity());
 

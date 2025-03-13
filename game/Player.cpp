@@ -119,6 +119,7 @@ const idEventDef EV_Player_DisableObjectives( "disableObjectives" );
 
 // mekberg: don't suppress showing of new objectives anymore
 const idEventDef EV_Player_AllowNewObjectives( "<allownewobjectives>" );
+
 class upgrades {
 public:
 	const char* upgradeName;
@@ -142,7 +143,7 @@ public:
 	}
 };
 
-upgrades upgradeList[] = { upgrades("Double\nJump", "Gain a second\n jump in the air"), upgrades("Dash", "Click Left Shift\n to Dash forward"), upgrades("Resurrection","Regain all your health\n on the brink of death"), upgrades("Burn\n Effect","Apply burn to\n your enemies on hit") };
+upgrades upgradeList[] = { upgrades("Double\nJump", "Gain a second\n jump in the air"), upgrades("Dash", "Click Left Shift\n to Dash forward"), upgrades("Resurrection","Regain all your health\n on the brink of death"), upgrades("Wither\n Effect","Apply wither to\n your enemies on hit\n(Doesn't Kill)"), upgrades("Life \nSteal", "Steal the health \nof enemies you hit")};
 upgrades upgradeOptions[3];
 upgrades powerUpList[] = { upgrades("Max\nHealth", "Increase your max\n health by 25"), upgrades("Armor", "Increase your\n armor by 25"), upgrades("Speed", "Increase your speed by 25"),  upgrades("Dash\nDistance", "Increase your dash\n distance by 100"), upgrades("Reduce\Dash CD", "Decrease your dash\n cooldown by 25%") };
 // RAVEN END
@@ -5127,6 +5128,10 @@ void idPlayer::LevelUp() {
 	level++;
 	hud->SetStateInt("playerLevel", level);
 	
+	if (inventory.levelingUp) {
+		selectUpgrade(0);
+	}
+
 	for (upgrades &option : upgradeOptions) {
 		option = upgrades();
 	}
@@ -5146,7 +5151,7 @@ void idPlayer::LevelUp() {
 			}
 		}
 	}
-	this->inventory.levelingUp = true;
+	inventory.levelingUp = true;
 	hud->HandleNamedEvent("showUpgradeMenu");
 	hud->SetStateString("upgradeName1", upgradeOptions[0].upgradeName);
 	hud->SetStateString("upgradeName2", upgradeOptions[1].upgradeName);
@@ -5158,6 +5163,9 @@ void idPlayer::LevelUp() {
 
 void idPlayer::selectUpgrade(int i) {
 	if (inventory.levelingUp) {
+		// { upgrades("Double\nJump", "Gain a second\n jump in the air"), upgrades("Dash", "Click Left Shift\n to Dash forward"), upgrades("Resurrection","Regain all your health\n on the brink of death"), upgrades("Burn\n Effect","Apply burn to\n your enemies on hit") };
+		
+	
 		for (upgrades &upgrade : upgradeList) {
 			if (upgradeOptions[i] == upgrade) {
 				upgrade.obtained = true;
@@ -5198,20 +5206,36 @@ void idPlayer::selectUpgrade(int i) {
 void idPlayer::playerDash() {
 	if (upgradeList[1].obtained && gameLocal.time > lastDashUsed + dashCooldown) {
 		idVec3 dashVector = viewAngles.ToMat3()[0];
-		
-
+		dashVector.z += .05f;
 		GetPhysics()->ApplyImpulse(0, this->GetPhysics()->GetOrigin(), dashVector * dashDistance * 100.0f);
-		gameLocal.Printf("yickadee");
-		gameLocal.Printf("Dash vector x: %f \n", dashVector.x * dashDistance);
-		gameLocal.Printf("Dash vector y: %f \n", dashVector.y * dashDistance);
-		gameLocal.Printf("Dash vector z: %f \n", dashVector.z * dashDistance);
 		lastDashUsed = gameLocal.time;
 	}
 	
 }
 
+void idPlayer::giveHealth(int i) {
+	health += i;
+}
 
+void idPlayer::GiveUpgrade(int i) {
+	if (!upgradeList[i-1].obtained) {
+		upgradeList[i-1].obtained = true;
+		level++;
+		hud->SetStateInt("playerLevel", level);
+	}
+	else {
+		gameLocal.Printf("Upgrade %i already obtained\n", i);
+	}
+	
+}
 
+int idPlayer::getUpgradeListSize() {
+	return sizeof(upgradeList) / sizeof(upgradeList[0]);
+}
+
+bool idPlayer::obtainedUpgrade(int i) {
+	return upgradeList[i].obtained;
+}
 /*
 ==============
 idPlayer::GiveWeaponMod
@@ -9235,7 +9259,7 @@ void idPlayer::Move( void ) {
  			physicsObj.SetLinearVelocity( vel );
  		}
 	}
-
+	
 	if ( pfl.jump ) {
 		loggedAccel_t	*acc = &loggedAccel[currentLoggedAccel&(NUM_LOGGED_ACCELS-1)];
 		currentLoggedAccel++;
@@ -10248,7 +10272,23 @@ void idPlayer::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &di
 		}
 	}
 	// RAVEN END
-
+	/*
+	idPlayer* player = dynamic_cast<idPlayer*>(this);
+	idAI* thisAI = dynamic_cast<idAI*>(attacker);
+	if (thisAI) {
+		gameLocal.Printf("%s \n", thisAI->GetClassname());
+	}
+	gameLocal.Printf("%s \n", attacker->GetClassname());
+	gameLocal.Printf("%s \n", attacker == this);
+	//gameLocal.Printf();
+	if (attacker == this && thisAI && upgradeList[3].obtained) {
+		
+		thisAI->withering = true;
+		thisAI->witherInflictTime = gameLocal.time;
+		gameLocal.Printf("wither start \n");
+		
+	}
+	*/
 	if ( forwardDamageEnt.IsValid() ) {
 		forwardDamageEnt->Damage( inflictor, attacker, dir, damageDefName, modifiedDamageScale, location );
 		return;
@@ -10445,6 +10485,13 @@ void idPlayer::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &di
 				if ( health < 1 ) {
 					health = 1;
 				}
+			}
+		}
+
+		if (upgradeList[2].obtained && gameLocal.time > lastResurrection + resurrectionCD) {
+			if (health < 1) {
+				health = inventory.maxHealth;
+				lastResurrection = gameLocal.time;
 			}
 		}
 

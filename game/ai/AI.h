@@ -513,6 +513,9 @@ public:
 	talkMessage_t			talkMessage;
 	int						talkBusyCount;
 	int						speakTime;
+	bool					withering = false;
+	int						lastWitherTick = 0;
+	int						witherInflictTime = 0;
 
 	// Focus
 	idEntityPtr<idEntity>	lookTarget;

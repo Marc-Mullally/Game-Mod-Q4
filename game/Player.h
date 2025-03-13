@@ -552,12 +552,21 @@ public:
 	int						numberOfUpgrades();
 	void					playerDash();
 	void					selectUpgrade(int i);
-	
+	void					GiveUpgrade(int i);
+	int						getUpgradeListSize();
+	bool					obtainedUpgrade(int i = 1);
+	void					giveHealth(int i);
 	int						lastDashUsed = 0;
 	int						dashCooldown = 7500;
 	float					dashDistance = 500.0f;
+	int						lastResurrection = 0;
+	int						resurrectionCD = 60000;
 	int						exp = 0;
 	int						level = 1;
+	float					witherTick = .25;
+	int						witherDamage = 25;
+	int						witherLength = 5000;
+	float					lifeStealFactor = .10f;
 	
 	
  	float					DefaultFov( void ) const;

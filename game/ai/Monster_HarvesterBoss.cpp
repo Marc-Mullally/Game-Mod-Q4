@@ -63,6 +63,7 @@ protected:
 	rvAIAction			actionSprayAttack;
 	rvAIAction			actionRocketAttack;
 	rvAIAction			actionGrenadeAttack;
+	//rvAIAction			actionGrenadeAttack;
 
 	jointHandle_t			whipJoints[WHIP_MAX];
 	idEntityPtr<idEntity>	whipProjectiles[WHIP_MAX];
@@ -77,6 +78,7 @@ protected:
 	bool				PlayMeleeAttackAnim(const idVec3& target, int blendFrames);
 	const char* GetRangedAttackAnim(const idVec3& target);
 	bool				PlayRangedAttackAnim(const idVec3& target, int blendFrames);
+	bool				PlayLeapAttackAnim(const idVec3& target, int blendFrames);
 
 	int					maxShots;
 	int					minShots;
@@ -92,9 +94,11 @@ private:
 	bool				CheckAction_WhipAttack(rvAIAction* action, int animNum);
 	virtual bool		CheckAction_MeleeAttack(rvAIAction* action, int animNum);
 	virtual bool		CheckAction_RangedAttack(rvAIAction* action, int animNum);
+	virtual bool		CheckAction_LeapAttack(rvAIAction* action, int animNum);
 	bool				CheckAction_SprayAttack(rvAIAction* action, int animNum);
 	bool				CheckAction_RocketAttack(rvAIAction* action, int animNum);
 	bool				CheckAction_GrenadeAttack(rvAIAction* action, int animNum);
+	
 
 	stateResult_t		State_Killed(const stateParms_t& parms);
 	stateResult_t		State_Dead(const stateParms_t& parms);
@@ -102,6 +106,7 @@ private:
 	// Torso States
 	stateResult_t		State_Torso_WhipAttack(const stateParms_t& parms);
 	stateResult_t		State_Torso_ClawAttack(const stateParms_t& parms);
+	stateResult_t		State_Torso_LeapAttack(const stateParms_t& parms);
 	stateResult_t		State_Torso_RangedAttack(const stateParms_t& parms);
 	stateResult_t		State_Torso_TurnRight90(const stateParms_t& parms);
 	stateResult_t		State_Torso_TurnLeft90(const stateParms_t& parms);
@@ -594,6 +599,20 @@ bool rvMonsterHarvesterBoss::CheckAction_MeleeAttack(rvAIAction* action, int ani
 	return true;
 }
 
+bool rvMonsterHarvesterBoss::CheckAction_LeapAttack(rvAIAction* action, int animNum) {
+	if (!enemy.ent || !enemy.fl.inFov) {
+		return false;
+	}
+	if (!GetMeleeAttackAnim(enemy.ent->GetEyePosition()))
+	{
+		return false;
+	}
+	// Must be looking right at the enemy to leap
+	if (!CheckFOV(enemy.ent->GetPhysics()->GetOrigin(), 45)) {
+		return false;
+	}
+	return true;
+}
 /*
 ================
 rvMonsterHarvesterBoss::CheckAction_RangedAttack
@@ -633,9 +652,11 @@ bool rvMonsterHarvesterBoss::CheckActions(void) {
 		return true;
 	}
 
+	/*
 	if (PerformAction(&actionWhipAttack, (checkAction_t)&rvMonsterHarvesterBoss::CheckAction_WhipAttack, NULL)) {
 		return true;
 	}
+	
 	if (PerformAction(&actionSprayAttack, (checkAction_t)&rvMonsterHarvesterBoss::CheckAction_SprayAttack, &actionTimerRangedAttack)) {
 		return true;
 	}
@@ -645,7 +666,7 @@ bool rvMonsterHarvesterBoss::CheckActions(void) {
 	if (PerformAction(&actionGrenadeAttack, (checkAction_t)&rvMonsterHarvesterBoss::CheckAction_GrenadeAttack, &actionTimerRangedAttack)) {
 		return true;
 	}
-		
+	*/
 	return idAI::CheckActions();
 }
 
@@ -677,6 +698,8 @@ STATE("Torso_TurnRight90", rvMonsterHarvesterBoss::State_Torso_TurnRight90)
 STATE("Torso_TurnLeft90", rvMonsterHarvesterBoss::State_Torso_TurnLeft90)
 STATE("Torso_SprayAttack", rvMonsterHarvesterBoss::State_Torso_SprayAttack)
 STATE("Torso_RocketAttack", rvMonsterHarvesterBoss::State_Torso_RocketAttack)
+STATE("Torso_LeapAttack", rvMonsterHarvesterBoss::State_Torso_LeapAttack)
+
 END_CLASS_STATES
 
 /*
@@ -728,6 +751,7 @@ rvMonsterHarvesterBoss::State_Torso_WhipAttack
 ================
 */
 stateResult_t rvMonsterHarvesterBoss::State_Torso_WhipAttack(const stateParms_t& parms) {
+	gameLocal.Printf("whip attack \n");
 	enum {
 		STAGE_ATTACK,
 		STAGE_ATTACK_WAIT,
@@ -856,6 +880,8 @@ rvMonsterHarvesterBoss::PlayMeleeAttackAnim
 */
 bool rvMonsterHarvesterBoss::PlayMeleeAttackAnim(const idVec3& target, int blendFrames) {
 	const char* animName = GetMeleeAttackAnim(target);
+
+
 	if (animName)
 	{
 		PlayAnim(ANIMCHANNEL_TORSO, animName, blendFrames);
@@ -863,6 +889,41 @@ bool rvMonsterHarvesterBoss::PlayMeleeAttackAnim(const idVec3& target, int blend
 	}
 	return false;
 }
+
+bool rvMonsterHarvesterBoss::PlayLeapAttackAnim(const idVec3& target, int blendFrames) {
+	const char* animName = GetMeleeAttackAnim(target);
+
+	if (animName)
+	{
+		idAngles angles = viewAxis.ToAngles(); 
+		idVec3 dashVector;
+		angles.ToVectors(&dashVector, NULL, NULL);
+		dashVector.Normalize();
+		dashVector.z += 250;  
+
+		float dashDistance = (target - GetPhysics()->GetOrigin()).Length();
+
+		if (isnan(dashDistance) || dashDistance < 0) {
+			gameLocal.Printf("Error: Invalid dashDistance: %f\n", dashDistance);
+			return false;
+		}
+
+		idVec3 impulse = dashVector * dashDistance * 1000.0f;
+		gameLocal.Printf("Applying impulse: x=%f, y=%f, z=%f\n", impulse.x, impulse.y, impulse.z);
+
+		if (isnan(impulse.x) || isnan(impulse.y) || isnan(impulse.z)) {
+			gameLocal.Printf("Error: Impulse contains NaN values!\n");
+			return false;
+		}
+
+		GetPhysics()->ApplyImpulse(0, this->GetPhysics()->GetOrigin(), dashVector * dashDistance * 1000.0f);
+		immuneToImpulse = true;
+		PlayAnim(ANIMCHANNEL_TORSO, animName, blendFrames);
+		return true;
+	}
+	return false;
+}
+
 
 /*
 ================
@@ -929,6 +990,7 @@ rvMonsterHarvesterBoss::State_Torso_ClawAttack
 ================
 */
 stateResult_t rvMonsterHarvesterBoss::State_Torso_ClawAttack(const stateParms_t& parms) {
+	gameLocal.Printf("claw attack \n");
 	enum {
 		STAGE_ATTACK,
 		STAGE_ATTACK_WAIT,
@@ -960,12 +1022,46 @@ stateResult_t rvMonsterHarvesterBoss::State_Torso_ClawAttack(const stateParms_t&
 	return SRESULT_ERROR;
 }
 
+stateResult_t rvMonsterHarvesterBoss::State_Torso_LeapAttack(const stateParms_t& parms) {
+	gameLocal.Printf("leap attack \n");
+	enum {
+		STAGE_ATTACK,
+		STAGE_ATTACK_WAIT,
+	};
+	switch (parms.stage) {
+	case STAGE_ATTACK: {
+		if (!enemy.ent) {
+			return SRESULT_DONE;
+		}
+
+		// Predict a bit
+		if (!PlayLeapAttackAnim(enemy.ent->GetEyePosition(), parms.blendFrames))
+		{
+			return SRESULT_DONE;
+		}
+
+		return SRESULT_STAGE(STAGE_ATTACK_WAIT);
+	}
+
+	case STAGE_ATTACK_WAIT:
+		if (AnimDone(ANIMCHANNEL_TORSO, parms.blendFrames)) {
+			//				animator.ClearAllJoints ( );
+			//				leftChainOut = false;
+			//				rightChainOut = false;
+			return SRESULT_DONE;
+		}
+		return SRESULT_WAIT;
+	}
+	return SRESULT_ERROR;
+}
+
 /*
 ================
 rvMonsterHarvesterBoss::State_Torso_RangedAttack
 ================
 */
 stateResult_t rvMonsterHarvesterBoss::State_Torso_RangedAttack(const stateParms_t& parms) {
+	gameLocal.Printf("ranged attack \n");
 	enum {
 		STAGE_INIT,
 		STAGE_ATTACK,
@@ -1012,6 +1108,7 @@ rvMonsterHarvesterBoss::State_Torso_TurnRight90
 ================
 */
 stateResult_t rvMonsterHarvesterBoss::State_Torso_TurnRight90(const stateParms_t& parms) {
+	gameLocal.Printf("right 90 \n");
 	enum {
 		STAGE_INIT,
 		STAGE_WAIT
@@ -1055,6 +1152,7 @@ rvMonsterHarvesterBoss::State_Torso_TurnLeft90
 ================
 */
 stateResult_t rvMonsterHarvesterBoss::State_Torso_TurnLeft90(const stateParms_t& parms) {
+	gameLocal.Printf("left 90 \n");
 	enum {
 		STAGE_INIT,
 		STAGE_WAIT
@@ -1098,6 +1196,7 @@ rvMonsterHarvesterBoss::State_Torso_SprayAttack
 ================
 */
 stateResult_t rvMonsterHarvesterBoss::State_Torso_SprayAttack(const stateParms_t& parms) {
+	gameLocal.Printf("spray \n");
 	enum {
 		STAGE_START,
 		STAGE_SWEEP,
@@ -1148,6 +1247,7 @@ rvMonsterHarvesterBoss::State_Torso_RocketAttack
 ================
 */
 stateResult_t rvMonsterHarvesterBoss::State_Torso_RocketAttack(const stateParms_t& parms) {
+	gameLocal.Printf("rocket \n");
 	enum {
 		STAGE_INIT,
 		STAGE_START_WAIT,

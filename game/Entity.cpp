@@ -3647,6 +3647,9 @@ void idEntity::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &di
 	if ( !attacker ) {
 		attacker = gameLocal.world;
 	}
+	
+	
+	
 
 	const idDict *damageDef = gameLocal.FindEntityDefDict( damageDefName, false );
 	if ( !damageDef ) {

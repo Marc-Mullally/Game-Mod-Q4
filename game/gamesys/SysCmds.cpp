@@ -324,6 +324,33 @@ void Cmd_KillMonsters_f( const idCmdArgs &args ) {
 // RAVEN END
 }
 
+void Cmd_LevelUp_f(const idCmdArgs& args) {
+	//gameLocal.Printf(typeid((atoi(args.Argv(1)).name())));
+	//gameLocal.Printf("%s", (int)args.Argv(1));
+	int x;
+	sscanf(args.Argv(1), "%i", &x);
+
+	if (x) {
+		for (int i = 0; i < x; i++) {
+			gameLocal.GetLocalPlayer()->LevelUp();
+		}
+	}
+}
+
+void Cmd_GiveUpgrade_f(const idCmdArgs& args) {
+	int x;
+	sscanf(args.Argv(1), "%i", &x);
+	if (x && x < gameLocal.GetLocalPlayer()->getUpgradeListSize()) {
+		gameLocal.GetLocalPlayer()->GiveUpgrade(x);
+	}
+}
+
+void Cmd_GiveAllUpgrade_f(const idCmdArgs& args) {
+	for (int i = 0; i < gameLocal.GetLocalPlayer()->getUpgradeListSize(); i++) {
+		gameLocal.GetLocalPlayer()->GiveUpgrade(i);
+	}
+}
+
 /*
 ==================
 Cmd_KillMovables_f
@@ -3066,6 +3093,11 @@ void idGameLocal::InitConsoleCommands( void ) {
 	cmdSystem->AddCommand( "addChatLine",			Cmd_AddChatLine_f,			CMD_FL_GAME,				"internal use - core to game chat lines" );
 	cmdSystem->AddCommand( "gameKick",				Cmd_Kick_f,					CMD_FL_GAME,				"same as kick, but recognizes player names" );
 	cmdSystem->AddCommand( "give",					Cmd_Give_f,					CMD_FL_GAME|CMD_FL_CHEAT,	"gives one or more items" );
+
+	cmdSystem->AddCommand("levelup",				Cmd_LevelUp_f,				CMD_FL_GAME | CMD_FL_CHEAT, "levels up one or more times");
+	cmdSystem->AddCommand("giveupgrade",			Cmd_GiveUpgrade_f,			CMD_FL_GAME | CMD_FL_CHEAT, "give an upgrade");
+	cmdSystem->AddCommand("giveallupgrades",		Cmd_GiveAllUpgrade_f,		CMD_FL_GAME | CMD_FL_CHEAT, "give all upgrades");
+
 	cmdSystem->AddCommand( "centerview",			Cmd_CenterView_f,			CMD_FL_GAME,				"centers the view" );
 	cmdSystem->AddCommand( "god",					Cmd_God_f,					CMD_FL_GAME|CMD_FL_CHEAT,	"enables god mode" );
 	cmdSystem->AddCommand( "undying",				Cmd_Undying_f,				CMD_FL_GAME|CMD_FL_CHEAT,	"enables undying mode (take damage down to 1 health, but do not die)" );

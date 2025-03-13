@@ -2390,6 +2390,18 @@ void idActor::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &dir
 	if ( !attacker ) {
 		attacker = gameLocal.world;
 	}
+	idPlayer* player = dynamic_cast<idPlayer*>(attacker);
+	idAI* thisAI = dynamic_cast<idAI*>(this);
+
+	//gameLocal.Printf();
+	if (attacker->IsType(idPlayer::GetClassType()) && thisAI && player->obtainedUpgrade(3)) {
+		thisAI->withering = true;
+		thisAI->witherInflictTime = gameLocal.time;
+		gameLocal.Printf("wither start \n");
+
+	}
+
+
 
 	const idDict *damageDef = gameLocal.FindEntityDefDict( damageDefName, false );
 	if ( !damageDef ) {
@@ -2398,6 +2410,12 @@ void idActor::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &dir
 
 	int	damage = damageDef->GetInt( "damage" ) * damageScale;
 	damage = GetDamageForLocation( damage, location );
+
+	if (attacker->IsType(idPlayer::GetClassType()) && thisAI && player->obtainedUpgrade(4)) {
+		gameLocal.Printf("%s", (int)(damage * (player->lifeStealFactor)));
+		attacker->health += (int)(damage * (player->lifeStealFactor));
+		player->UpdateHud();
+	}
 
 	// friendly fire damage
 	bool noDmgFeedback = false;
